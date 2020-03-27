@@ -9,15 +9,13 @@ namespace JackAnalyser
 {
     class Program
     {
-        static void Main(string[] args)
-        {
         public static StreamReader inFile;
         public static StreamWriter outFile;
         public static int labelPtr = 0;
         public static int retPtr = 0;
-        static void Main(string[] args)
+       static void Main(string[] args)
         {
-            Parser theParser;
+            JackTokenizer theTokenizer;
             String sBase, line;
 
             sBase = "E:\\Learning\\Coursera\\nand2tetris\\projects\\10\\";
@@ -32,15 +30,13 @@ namespace JackAnalyser
                 // Get the filename without extension from the entry
                 String[] strVals = new string[] { "\\" };
                 String[] strSplit = line.Split(strVals, StringSplitOptions.RemoveEmptyEntries);
-                String fname = (strSplit[strSplit.Count() - 1]).Trim(); ;
-                fname = fname.Substring(0, fname.IndexOf(".") + 1);
-                theParser = new Parser(fname);
+                theTokenizer = new JackTokenizer();
                 line = sBase + line;
                 inFile = new StreamReader(line);
                 int indx = line.LastIndexOf(".");
                 line = line.Substring(0, indx + 1) + "xml";
                 outFile = new StreamWriter(line);
-                theParser.ReadTheFile();
+                theTokenizer.ReadTheFile();
                 //sr.DiscardBufferedData();
                 //sr.BaseStream.Seek(0, System.IO.SeekOrigin.Begin);
                 //theProcessor.FinalPass(sr, theTable, sw);
@@ -76,14 +72,9 @@ namespace JackAnalyser
                             outFile = new StreamWriter(tmp + "xml");
                             outFileDone = true;
                         }
-                        theParser = new Parser(fname);
-                        if (!bootstrapDone)
-                        {
-                            theParser.doBootstrap();
-                            bootstrapDone = true;
-                        }
+                        theTokenizer = new JackTokenizer();
                         inFile = new StreamReader(file.FullName);
-                        theParser.ReadTheFile();
+                        theTokenizer.ReadTheFile();
                         inFile.Close();
                     }
                 }
