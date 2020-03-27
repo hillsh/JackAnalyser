@@ -53,7 +53,7 @@ namespace JackAnalyser
                 String fname = (strSplit[strSplit.Count() - 1]).Trim();
                 DirectoryInfo d = new DirectoryInfo(line);
                 FileInfo[] fI = d.GetFiles("*.jack");
-                Boolean outFileDone = false, bootstrapDone = false;
+                Boolean outFileDone = false;
                 if (fI.Length > 0)
                 {
                     if (fI.Length > 1)

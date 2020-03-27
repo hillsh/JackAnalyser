@@ -64,16 +64,11 @@ namespace JackAnalyser
 
                                 String inStr = strSplit[0].Trim();
                                 tokenize(inStr);
-                                String[] parts = inStr.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
-                                if (parts.Count() > 0)
-                                {
-                                }
                             }
                         }
 
                     }
                 }
-
                 //Read the next line
                 line = Program.inFile.ReadLine();
             }
@@ -82,91 +77,146 @@ namespace JackAnalyser
 
         private void tokenize(String inStr)
         {
-            inStr = Regex.Replace(inStr, @"\s+", "\u0007"); // Remove all whitespace inside the string and replace with a nonprinting UNICODE char
-            String[] parts = inStr.Split(symbols, StringSplitOptions.RemoveEmptyEntries);   //splits on all symbols
-            int charCount = 0;
-            String makeString = "";
-            Boolean stringConstruct = false;
-            if (parts.Count() > 0)
+            if(inStr.Contains("\""))    // The line contains a string, therefore must be processed differently
             {
-                for (int i = 0; i< parts.Count(); i++)
+                String pattern = @"\s";
+                Regex rgx = new Regex(pattern);
+                Boolean fillingString = false;
+                String sTemp = "";
+                for(int j=0; j<inStr.Count(); j++)
                 {
-                    if (parts[i].Contains("\"") || stringConstruct)
+                    String sc = (inStr[j]).ToString();
+                    if (rgx.IsMatch(sc) || symbols.Any(sc.Contains) || sc.Contains("\""))
                     {
-                        makeString += parts[i];
-                        charCount += parts[i].Length;
-                        if(makeString.Substring(2).Contains("\""))
+                        if(!fillingString)
                         {
-                            currentToken.theToken = makeString;
-                            currentToken.theTokenType = tokenType.STRING_CONST;
- //                           writeTheToken();
-                            stringConstruct = false;
+                            if(sTemp.Length > 0)
+                            {
+                                getTokenType(sTemp);
+                                writeTheToken();
+                            }
+                            if (symbols.Any(sc.Contains))
+                            {
+                                currentToken.theToken = sc;
+                                currentToken.theTokenType = tokenType.SYMBOL;
+                                writeTheToken();
+                            }
+                            else
+                            {
+                                if(sc.Contains("\""))
+                                    fillingString = true;
+                            }
+                            sTemp = "";
                         }
                         else
                         {
-                            makeString += " ";
-                            charCount++;
-                            stringConstruct = true;
+                            if (sc.Contains("\""))
+                            {
+                                currentToken.theToken = sTemp;
+                                currentToken.theTokenType = tokenType.STRING_CONST;
+                                writeTheToken();
+                                sTemp = "";
+                                fillingString = false;
+                            }
+                            else
+                                sTemp += sc;
                         }
                     }
                     else
+                        sTemp += sc;
+                }
+
+            }
+            else
+            {
+                inStr = Regex.Replace(inStr, @"\s+", "\u0007"); // Remove all whitespace inside the string and replace with a nonprinting UNICODE char
+                String[] parts = inStr.Split(symbols, StringSplitOptions.RemoveEmptyEntries);   //splits on all symbols
+                int charCount = 0;
+                for (int i = 0; i < parts.Count(); i++)
+                {
+                    currentToken.theToken = parts[i];
+                    getTokenType(parts[i]);
+                    writeTheToken();
+                    charCount += parts[i].Length;
+                    if (i < parts.Count() - 1)
                     {
-                        currentToken.theToken = parts[i];
-                        if (keyWords.Any(parts[i].Contains))
-                            currentToken.theTokenType = tokenType.KEYWORD;
-                        else
-                           if (parts[i].Contains("\""))
-                            currentToken.theTokenType = tokenType.STRING_CONST;
-                        else
-                            if (parts[i].All(Char.IsDigit))
-                            currentToken.theTokenType = tokenType.INT_CONST;
-                        else
-                            currentToken.theTokenType = tokenType.IDENTIFIER;
-//                    writeTheToken();
-                        charCount += parts[i].Length;
-                        if(i < parts.Count()-1)
+                        String sTemp = inStr.Substring(charCount);
+                        for (int j = 0; j < sTemp.IndexOf(parts[i + 1]); j++)
                         {
-                            String sTemp = inStr.Substring(charCount);
-                            for(int j=0; j < sTemp.IndexOf(parts[i+1]); j++)
+                            if (inStr[charCount] != '\u0007')
                             {
-                                if (inStr[charCount] != '\u0007')
-                                {
-                                    currentToken.theToken = inStr[charCount].ToString();
-                                    currentToken.theTokenType = tokenType.SYMBOL;
-//                                    writeTheToken();
-                                }
-                                charCount++;
+                                currentToken.theToken = inStr[charCount].ToString();
+                                currentToken.theTokenType = tokenType.SYMBOL;
+                                writeTheToken();
                             }
+                            charCount++;
                         }
                     }
                 }
                 if (charCount < inStr.Length)
                 {
-                    for(int j = charCount; j<inStr.Length; j++)
+                    for (int j = charCount; j < inStr.Length; j++)
                     {
                         if (inStr[j] != '\u0007')
                         {
                             currentToken.theToken = inStr[j].ToString();
                             currentToken.theTokenType = tokenType.SYMBOL;
-//                            writeTheToken();
+                            writeTheToken();
                         }
                     }
                 }
             }
+        }
+
+        private void getTokenType(String sTk)
+        {
+            currentToken.theToken = sTk;
+            if (checkKeywords(sTk))
+                currentToken.theTokenType = tokenType.KEYWORD;
+            else
+                if (sTk.All(Char.IsDigit))
+                currentToken.theTokenType = tokenType.INT_CONST;
+            else
+                currentToken.theTokenType = tokenType.IDENTIFIER;
+        }
+
+        private Boolean checkKeywords(String inStr)
+        {
+            int j;
+            for (j = 0; j < keyWords.Count(); j++)
+                if (String.Equals(inStr, keyWords[j]))
+                    return true;
+            return false;
         }
         private void writeTheToken()
         {
             switch (currentToken.theTokenType)
             {
                 case tokenType.IDENTIFIER:
+                    Program.outFile.WriteLine("<identifier> " + currentToken.theToken + " </identifier>");
                     break;
                 case tokenType.INT_CONST:
+                    Program.outFile.WriteLine("<integerConstant> " + currentToken.theToken + " </integerConstant>");
                     break;
                 case tokenType.KEYWORD:
+                    Program.outFile.WriteLine("<keyword> " + currentToken.theToken + " </keyword>");
                     break;
                 case tokenType.STRING_CONST:
+                    Program.outFile.WriteLine("<stringConstant> " + currentToken.theToken + " </stringConstant>");
                     break;
                 case tokenType.SYMBOL:
+                    switch (currentToken.theToken)
+                    {
+                        case "<":
+                            Program.outFile.WriteLine("<symbol> &lt; </symbol>");
+                            break;
+                        case ">":
+                            Program.outFile.WriteLine("<symbol> &gt; </symbol>");
+                            break;
+                        default:
+                            Program.outFile.WriteLine("<symbol> " + currentToken.theToken + " </symbol>");
+                            break;
+                    }
                     break;
                 default:
                     Console.WriteLine("Unidentified token: ");
