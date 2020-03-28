@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace JackAnalyser
 {
@@ -15,6 +16,7 @@ namespace JackAnalyser
         private static String[] symbols = {"{","}","(",")","[","]",".",",",";","+","-","*","/","$","|","<",
         ">","=","~","\u0007"};
         private Boolean hasMoreTokens = false;
+        private StreamWriter theWriter;
         private struct token
         {
             public String theToken;
@@ -22,8 +24,9 @@ namespace JackAnalyser
         };
         private token currentToken;
 
-        public JackTokenizer()
+        public JackTokenizer(StreamWriter sw)
         {
+            theWriter = sw;
         }
 
         public void ReadTheFile()
@@ -31,7 +34,7 @@ namespace JackAnalyser
             String line;
             Boolean multistringComment = false;
 
-            Program.outFile.WriteLine("<tokens>");
+            theWriter.WriteLine("<tokens>");
 
             line = Program.inFile.ReadLine();
 
@@ -72,7 +75,7 @@ namespace JackAnalyser
                 //Read the next line
                 line = Program.inFile.ReadLine();
             }
-            Program.outFile.WriteLine("</tokens>");
+            theWriter.WriteLine("</tokens>");
         }
 
         private void tokenize(String inStr)
@@ -193,28 +196,34 @@ namespace JackAnalyser
             switch (currentToken.theTokenType)
             {
                 case tokenType.IDENTIFIER:
-                    Program.outFile.WriteLine("<identifier> " + currentToken.theToken + " </identifier>");
+                    theWriter.WriteLine("<identifier> " + currentToken.theToken + " </identifier>");
                     break;
                 case tokenType.INT_CONST:
-                    Program.outFile.WriteLine("<integerConstant> " + currentToken.theToken + " </integerConstant>");
+                    theWriter.WriteLine("<integerConstant> " + currentToken.theToken + " </integerConstant>");
                     break;
                 case tokenType.KEYWORD:
-                    Program.outFile.WriteLine("<keyword> " + currentToken.theToken + " </keyword>");
+                    theWriter.WriteLine("<keyword> " + currentToken.theToken + " </keyword>");
                     break;
                 case tokenType.STRING_CONST:
-                    Program.outFile.WriteLine("<stringConstant> " + currentToken.theToken + " </stringConstant>");
+                    theWriter.WriteLine("<stringConstant> " + currentToken.theToken + " </stringConstant>");
                     break;
                 case tokenType.SYMBOL:
                     switch (currentToken.theToken)
                     {
                         case "<":
-                            Program.outFile.WriteLine("<symbol> &lt; </symbol>");
+                            theWriter.WriteLine("<symbol> &lt; </symbol>");
                             break;
                         case ">":
-                            Program.outFile.WriteLine("<symbol> &gt; </symbol>");
+                            theWriter.WriteLine("<symbol> &gt; </symbol>");
+                            break;
+                        case "\"":
+                            theWriter.WriteLine("<symbol> &quot; </symbol>");
+                            break;
+                        case "&":
+                            theWriter.WriteLine("<symbol> &amp; </symbol>");
                             break;
                         default:
-                            Program.outFile.WriteLine("<symbol> " + currentToken.theToken + " </symbol>");
+                            theWriter.WriteLine("<symbol> " + currentToken.theToken + " </symbol>");
                             break;
                     }
                     break;
