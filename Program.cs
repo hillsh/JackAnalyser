@@ -49,6 +49,7 @@ namespace JackAnalyser
                 inFile = new StreamReader(memStr);
                 xmlFile = new StreamWriter(line);
                 theCompiler = new CompilationEngine(inFile, xmlFile);
+                theCompiler.CompiletheTokens();
                 //close the Streamreader and Streamwriter
                 inFile.Close();
                 outFile.Close();
@@ -82,6 +83,7 @@ namespace JackAnalyser
                         inFile = new StreamReader(memStr);
                         xmlFile = new StreamWriter(tmp + "SH.xml");
                         theCompiler = new CompilationEngine(inFile, xmlFile);
+                        theCompiler.CompiletheTokens();
                        //close the Streamreader and Streamwriter
                         inFile.Close();
                         outFile.Close();
