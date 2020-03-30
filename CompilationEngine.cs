@@ -49,7 +49,7 @@ namespace JackAnalyser
         }
         private Boolean CompileClass() // arriving here means that the keyword 'class' has been read
         {
-            Boolean result = true, classVarDeclarations = false;
+            Boolean result = true;
             theWriter.WriteLine(indent(spaces)  + "<class>");
             spaces+=2;
             theWriter.WriteLine(indent(spaces)  + "<keyword> class </keyword>");
@@ -76,24 +76,16 @@ namespace JackAnalyser
                             {
                                 case "static":
                                 case "field":
-                                    if (!classVarDeclarations)
-                                    {
-                                        theWriter.WriteLine(indent(spaces)  + "<classVarDec>");
-                                        spaces += 2;
-                                        classVarDeclarations = true;
-                                    }
+                                    theWriter.WriteLine(indent(spaces)  + "<classVarDec>");
+                                    spaces += 2;
                                     if (!CompileClassVarDec())
                                         return false;
+                                    spaces -= 2;
+                                    theWriter.WriteLine(indent(spaces)  + "</classVarDec>");
                                     break;
                                 case "constructor":
                                 case "function":
                                 case "method":
-                                    if (classVarDeclarations)
-                                    {
-                                        spaces -= 2;
-                                        theWriter.WriteLine(indent(spaces)  + "</classVarDec>");
-                                        classVarDeclarations = false;
-                                    }
                                     if (!CompileSubroutineDec())
                                         return false;
                                     break;
@@ -321,9 +313,11 @@ namespace JackAnalyser
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ")")))
                 return false;
             theWriter.WriteLine(indent(spaces)  + "<symbol> ) </symbol>");
+            advance();
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "{")))
                 return false;
             theWriter.WriteLine(indent(spaces)  + "<symbol> { </symbol>");
+            advance();
             if (!CompileStatements())
                 return false;
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "}")))
@@ -390,6 +384,7 @@ namespace JackAnalyser
                     case ";":
                     case ")":
                     case "]":
+                    case ",":
                         break;
                     default:
                         return false;
@@ -403,11 +398,37 @@ namespace JackAnalyser
         {
             Boolean result = true;
 
-            theWriter.WriteLine(indent(spaces)  + "<term>");
-            spaces+=2;
-            if (currentToken.theTokenType != tokenType.IDENTIFIER)
-                return false;
-            theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
+            theWriter.WriteLine(indent(spaces) + "<term>");
+            spaces += 2;
+            switch (currentToken.theTokenType)
+            {
+                case tokenType.IDENTIFIER:
+                    theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
+                    break;
+                case tokenType.KEYWORD:
+                    switch(currentToken.theToken)
+                    {
+                        case "true":
+                        case "false":
+                        case "null":
+                        case "this":
+                            theWriter.WriteLine(indent(spaces)  + "<keyword> " + currentToken.theToken + " </keyword>");
+                            break;
+                        default:
+                            return false;
+                    }
+                    break;
+                case tokenType.SYMBOL:
+                    break;
+                case tokenType.INT_CONST:
+                    theWriter.WriteLine(indent(spaces)  + "<integerConstant> " + currentToken.theToken + " </integerConstant>");
+                    break;
+                case tokenType.STRING_CONST:
+                    theWriter.WriteLine(indent(spaces)  + "<stringConstant> " + currentToken.theToken + " </stringConstant>");
+                    break;
+                default:
+                    return false;
+            }
             advance();
             spaces-=2;
             theWriter.WriteLine(indent(spaces)  + "</term>");
@@ -519,6 +540,7 @@ namespace JackAnalyser
         private Boolean CompileParameterList()
         {
             Boolean result = true;
+            spaces += 2;
             while(!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ")")))
             {
                 if (!CompileType())
@@ -536,6 +558,7 @@ namespace JackAnalyser
                     advance();
                 }
             }
+            spaces -= 2;
             return result;
         }
         
