@@ -10,6 +10,7 @@ namespace JackAnalyser
     class CompilationEngine
     {
         private enum tokenType { KEYWORD, SYMBOL, IDENTIFIER, INT_CONST, STRING_CONST, ERROR };
+        private int spaces = 0;
         private struct token
         {
             public String theToken;
@@ -42,23 +43,28 @@ namespace JackAnalyser
             return result;
         }
 
+        private static string indent(int count)
+        {
+            return "".PadLeft(count);
+        }
         private Boolean CompileClass() // arriving here means that the keyword 'class' has been read
         {
             Boolean result = true, classVarDeclarations = false;
-            theWriter.WriteLine("<class>");
-            theWriter.WriteLine("<keyword> class </keyword>");
+            theWriter.WriteLine(indent(spaces)  + "<class>");
+            spaces+=2;
+            theWriter.WriteLine(indent(spaces)  + "<keyword> class </keyword>");
             advance();
             if (currentToken.theTokenType != tokenType.IDENTIFIER)
                 return false;
             else
             {
-                theWriter.WriteLine("<identifier> " + currentToken.theToken + "</identifier>");
+                theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
                 advance();
                 if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "{")))
                     return false;
                 else
                 {
-                    theWriter.WriteLine("<symbol> { </symbol>");
+                    theWriter.WriteLine(indent(spaces)  + "<symbol> { </symbol>");
                     advance();
                     while(!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "}")))
                     {
@@ -72,7 +78,8 @@ namespace JackAnalyser
                                 case "field":
                                     if (!classVarDeclarations)
                                     {
-                                        theWriter.WriteLine("<classVarDec>");
+                                        theWriter.WriteLine(indent(spaces)  + "<classVarDec>");
+                                        spaces += 2;
                                         classVarDeclarations = true;
                                     }
                                     if (!CompileClassVarDec())
@@ -83,7 +90,8 @@ namespace JackAnalyser
                                 case "method":
                                     if (classVarDeclarations)
                                     {
-                                        theWriter.WriteLine("</classVarDec>");
+                                        spaces -= 2;
+                                        theWriter.WriteLine(indent(spaces)  + "</classVarDec>");
                                         classVarDeclarations = false;
                                     }
                                     if (!CompileSubroutineDec())
@@ -91,13 +99,13 @@ namespace JackAnalyser
                                     break;
                                 default:
                                     return false;
-                                    break;
                             }
                         }
                         advance();
                     }
-                    theWriter.WriteLine("<symbol> } </symbol>");
-                    theWriter.WriteLine("</class>");
+                    theWriter.WriteLine(indent(spaces)  + "<symbol> } </symbol>");
+                    spaces-=2;
+                    theWriter.WriteLine(indent(spaces)  + "</class>");
                 }
             }
             return result;
@@ -107,34 +115,36 @@ namespace JackAnalyser
         {
             Boolean result = true;
             
-            theWriter.WriteLine("<subroutineDec>");
-            theWriter.WriteLine("<keyword> " + currentToken.theToken + " </keyword>");
+            theWriter.WriteLine(indent(spaces)  + "<subroutineDec>");
+            spaces+=2;
+            theWriter.WriteLine(indent(spaces)  + "<keyword> " + currentToken.theToken + " </keyword>");
             advance();
             if ((currentToken.theTokenType == tokenType.KEYWORD) && (currentToken.theToken == "void"))
-                theWriter.WriteLine("<keyword> void </keyword>");
+                theWriter.WriteLine(indent(spaces)  + "<keyword> void </keyword>");
             else
                 if (!CompileType())
                     return false;
             advance();
             if (currentToken.theTokenType != tokenType.IDENTIFIER)
                 return false;
-            theWriter.WriteLine("<identifier> " + currentToken.theToken + " </identifier>");
+            theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
             advance();
             if ((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "("))
-                theWriter.WriteLine("<symbol> ( </symbol>");
+                theWriter.WriteLine(indent(spaces)  + "<symbol> ( </symbol>");
             else
                 return false;
-            theWriter.WriteLine("<parameterList>");
+            theWriter.WriteLine(indent(spaces)  + "<parameterList>");
             advance();
             if (!CompileParameterList())
                 return false;
-            theWriter.WriteLine("</parameterList>");
-            theWriter.WriteLine("<symbol> ) </symbol>");
+            theWriter.WriteLine(indent(spaces)  + "</parameterList>");
+            theWriter.WriteLine(indent(spaces)  + "<symbol> ) </symbol>");
             advance();
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "{")))
                 return false;
-            theWriter.WriteLine("<subroutineBody>");
-            theWriter.WriteLine("<symbol> { </symbol>");
+            theWriter.WriteLine(indent(spaces)  + "<subroutineBody>");
+            spaces += 2;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> { </symbol>");
             advance();
             if (!CompileVarDecs())
                 return false;
@@ -142,9 +152,11 @@ namespace JackAnalyser
                 return false;
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "}")))
                 return false;
-            theWriter.WriteLine("<symbol> } </symbol>");
-            theWriter.WriteLine("</subroutineBody>");
-            theWriter.WriteLine("</subroutineDec>");
+            theWriter.WriteLine(indent(spaces)  + "<symbol> } </symbol>");
+            spaces -= 2;
+            theWriter.WriteLine(indent(spaces)  + "</subroutineBody>");
+            spaces-=2;
+            theWriter.WriteLine(indent(spaces)  + "</subroutineDec>");
 
 
             return result;
@@ -153,6 +165,320 @@ namespace JackAnalyser
         private Boolean CompileStatements()
         {
             Boolean result = true;
+
+            theWriter.WriteLine(indent(spaces)  + "<statements>");
+            spaces+=2;
+            while (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "}")))
+            {
+                if (currentToken.theTokenType != tokenType.KEYWORD)
+                    return false;
+                switch (currentToken.theToken)
+                {
+                    case "let":
+                        if (!CompileLetStatement())
+                            return false;
+                        break;
+                    case "if":
+                        if (!CompileIfStatement())
+                            return false;
+                        break;
+                    case "while":
+                        if (!CompileWhileStatement())
+                            return false;
+                        break;
+                    case "do":
+                        if (!CompileDoStatement())
+                            return false;
+                        break;
+                    case "return":
+                        if (!CompileReturnStatement())
+                            return false;
+                        break;
+                    default:
+                        return false;
+                }
+            }
+            spaces-=2;
+            theWriter.WriteLine(indent(spaces)  + "</statements>");
+            return result;
+        }
+
+        private Boolean CompileLetStatement()
+        {
+            Boolean result = true;
+
+            theWriter.WriteLine(indent(spaces)  + "<letStatement>");
+            spaces+=2;
+            theWriter.WriteLine(indent(spaces)  + "<keyword> let </keyword>");
+            advance();
+            if (!(currentToken.theTokenType == tokenType.IDENTIFIER))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
+            advance();
+            if (!(currentToken.theTokenType == tokenType.SYMBOL))
+                return false;
+            if (currentToken.theToken == "[")
+            {
+                theWriter.WriteLine(indent(spaces)  + "<symbol> [ </symbol>");
+                advance();
+                if (!CompileExpression())
+                    return false;
+                if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "]")))
+                    return false;
+                theWriter.WriteLine(indent(spaces)  + "<symbol> ] </symbol>");
+                advance();
+            }
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "=")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> = </symbol>");
+            advance();
+            if (!CompileExpression())
+                return false;
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ";")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> ; </symbol>");
+            spaces-=2;
+            theWriter.WriteLine(indent(spaces)  + "</letStatement>");
+            advance();
+            return result;
+        }
+
+        private Boolean CompileDoStatement()
+        {
+            Boolean result = true;
+
+            theWriter.WriteLine(indent(spaces)  + "<doStatement>");
+            spaces+=2;
+            theWriter.WriteLine(indent(spaces)  + "<keyword> do </keyword>");
+            advance();
+            if (!CompileSubroutineCall())
+                return false;
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ";")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> ; </symbol>");
+            spaces-=2;
+            theWriter.WriteLine(indent(spaces)  + "</doStatement>");
+            advance();
+            return result;
+        }
+
+        private Boolean CompileSubroutineCall()
+        {
+            Boolean result = true;
+
+            if (currentToken.theTokenType != tokenType.IDENTIFIER)
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
+            advance();
+            if (!(currentToken.theTokenType == tokenType.SYMBOL))
+                return false;
+            switch (currentToken.theToken)
+            {
+                case "(":
+                    theWriter.WriteLine(indent(spaces)  + "<symbol> ( </symbol>");
+                    advance();
+                    if (!CompileExpressionList())
+                        return false;
+                    break;
+                case ".":
+                    theWriter.WriteLine(indent(spaces)  + "<symbol> . </symbol>");
+                    advance();
+                    if (currentToken.theTokenType != tokenType.IDENTIFIER)
+                        return false;
+                    theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
+                    advance();
+                    if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "(")))
+                        return false;
+                    theWriter.WriteLine(indent(spaces)  + "<symbol> ( </symbol>");
+                    advance();
+                    if (!CompileExpressionList())
+                        return false;
+                    break;
+                default:
+                    return false;
+            }
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ")")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> ) </symbol>");
+            advance();
+            return result;
+        }
+
+        private Boolean CompileWhileStatement()
+        {
+            Boolean result = true;
+
+            theWriter.WriteLine(indent(spaces)  + "<whileStatement>");
+            spaces+=2;
+            theWriter.WriteLine(indent(spaces)  + "<keyword> while </keyword>");
+            advance();
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "(")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> ( </symbol>");
+            advance();
+            if (!CompileExpression())
+                return false;
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ")")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> ) </symbol>");
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "{")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> { </symbol>");
+            if (!CompileStatements())
+                return false;
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "}")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> } </symbol>");
+            spaces-=2;
+            theWriter.WriteLine(indent(spaces)  + "</whileStatement>");
+            advance();
+            return result;
+        }
+
+        private Boolean CompileExpressionList()
+        {
+            Boolean result = true, firstExp = true;
+
+            theWriter.WriteLine(indent(spaces)  + "<expressionList>");
+            spaces+=2;
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ")")))   //empty list
+            {
+                do
+                {
+                    if (firstExp)
+                        firstExp = false;
+                    else
+                    {
+                        theWriter.WriteLine(indent(spaces)  + "<symbol> , </symbol>");
+                        advance();
+                    }
+                    if (!CompileExpression())
+                        return false;
+                } while (((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ",")));
+
+            }
+            spaces-=2;
+            theWriter.WriteLine(indent(spaces)  + "</expressionList>");
+            return result;
+        }
+
+        private Boolean CompileExpression()
+        {
+            Boolean result = true;
+
+            theWriter.WriteLine(indent(spaces)  + "<expression>");
+            spaces+=2;
+            if (!CompileTerm())
+                return false;
+            if(currentToken.theTokenType == tokenType.SYMBOL)
+                switch (currentToken.theToken)
+                {
+                    case "+":
+                    case "-":
+                    case "*":
+                    case "/":
+                    case "&":
+                    case "|":
+                    case "<":
+                    case ">":
+                    case "=":
+                        theWriter.WriteLine(indent(spaces)  + "<symbol> "+currentToken.theToken + " </symbol>");
+                        advance();
+                        if (!CompileTerm())
+                            return false;
+                        break;
+                    case ";":
+                    case ")":
+                    case "]":
+                        break;
+                    default:
+                        return false;
+                }
+            spaces-=2;
+            theWriter.WriteLine(indent(spaces)  + "</expression>");
+            return result;
+        }
+
+        private Boolean CompileTerm()
+        {
+            Boolean result = true;
+
+            theWriter.WriteLine(indent(spaces)  + "<term>");
+            spaces+=2;
+            if (currentToken.theTokenType != tokenType.IDENTIFIER)
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
+            advance();
+            spaces-=2;
+            theWriter.WriteLine(indent(spaces)  + "</term>");
+            return result;
+        }
+        private Boolean CompileIfStatement()
+        {
+            Boolean result = true;
+
+            theWriter.WriteLine(indent(spaces)  + "<ifStatement>");
+            spaces+=2;
+            theWriter.WriteLine(indent(spaces)  + "<keyword> if </keyword>");
+            advance();
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "(")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> ( </symbol>");
+            advance();
+            if (!CompileExpression())
+                return false;
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ")")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> ) </symbol>");
+            advance();
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "{")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> { </symbol>");
+            advance();
+            if (!CompileStatements())
+                return false;
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "}")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> } </symbol>");
+            advance();
+            if (((currentToken.theTokenType == tokenType.KEYWORD) && (currentToken.theToken == "else")))
+            {
+                theWriter.WriteLine(indent(spaces)  + "<keyword> else </keyword>");
+                advance();
+                if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "{")))
+                    return false;
+                theWriter.WriteLine(indent(spaces)  + "<symbol> { </symbol>");
+                advance();
+                if (!CompileStatements())
+                    return false;
+                if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "}")))
+                    return false;
+                theWriter.WriteLine(indent(spaces)  + "<symbol> } </symbol>");
+                advance();
+            }
+            spaces-=2;
+            theWriter.WriteLine(indent(spaces)  + "</ifStatement>");
+            return result;
+        }
+        private Boolean CompileReturnStatement()
+        {
+            Boolean result = true;
+
+            theWriter.WriteLine(indent(spaces)  + "<returnStatement>");
+            spaces+=2;
+            theWriter.WriteLine(indent(spaces)  + "<keyword> return </keyword>");
+            advance();
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ";")))
+            {
+                if (!CompileExpression())
+                    return false;
+            }
+            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ";")))
+                return false;
+            theWriter.WriteLine(indent(spaces)  + "<symbol> ; </symbol>");
+            advance();
+            spaces-=2;
+            theWriter.WriteLine(indent(spaces)  + "</returnStatement>");
             return result;
         }
 
@@ -161,8 +487,9 @@ namespace JackAnalyser
             Boolean result = true;
             while ((currentToken.theTokenType == tokenType.KEYWORD) && (currentToken.theToken == "var"))
             {
-                theWriter.WriteLine("<varDec>");
-                theWriter.WriteLine("<keyword> var </keyword>");
+                theWriter.WriteLine(indent(spaces)  + "<varDec>");
+                spaces+=2;
+                theWriter.WriteLine(indent(spaces)  + "<keyword> var </keyword>");
                 advance();
                 if (!CompileType())
                     return false;
@@ -171,7 +498,7 @@ namespace JackAnalyser
                     advance();
                     if (currentToken.theTokenType != tokenType.IDENTIFIER)
                         return false;
-                    theWriter.WriteLine("<identifier> " + currentToken.theToken + " </identifier>");
+                    theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
                     advance();
                     if (currentToken.theTokenType != tokenType.SYMBOL)
                         return false;
@@ -179,10 +506,11 @@ namespace JackAnalyser
                         break;
                     if (currentToken.theToken != ",")
                         return false;
-                    theWriter.WriteLine("<symbol> , </symbol>");
+                    theWriter.WriteLine(indent(spaces)  + "<symbol> , </symbol>");
                 }
-                theWriter.WriteLine("<symbol> ; </symbol>");
-                theWriter.WriteLine("</varDec>");
+                theWriter.WriteLine(indent(spaces)  + "<symbol> ; </symbol>");
+                spaces-=2;
+                theWriter.WriteLine(indent(spaces)  + "</varDec>");
                 advance();
             }
             return result;
@@ -198,13 +526,13 @@ namespace JackAnalyser
                 advance();
                 if (!(currentToken.theTokenType == tokenType.IDENTIFIER))
                     return false;
-                theWriter.WriteLine("<identifier> " + currentToken.theToken + " </identifier>");
+                theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
                 advance();
                 if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ")")))
                 {
                     if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ",")))
                         return false;
-                    theWriter.WriteLine("<symbol> , </symbol>");
+                    theWriter.WriteLine(indent(spaces)  + "<symbol> , </symbol>");
                     advance();
                 }
             }
@@ -215,7 +543,7 @@ namespace JackAnalyser
         {
             Boolean result = true;
 
-            theWriter.WriteLine("<keyword> " + currentToken.theToken + " </keyword>");
+            theWriter.WriteLine(indent(spaces)  + "<keyword> " + currentToken.theToken + " </keyword>");
             advance();
             if (!CompileType())
                 return false;
@@ -224,7 +552,7 @@ namespace JackAnalyser
                 advance();
                 if (currentToken.theTokenType != tokenType.IDENTIFIER)
                     return false;
-                theWriter.WriteLine("<identifier> " + currentToken.theToken + " </identifier>");
+                theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
                 advance();
                 if (currentToken.theTokenType != tokenType.SYMBOL)
                     return false;
@@ -232,9 +560,9 @@ namespace JackAnalyser
                     break;
                 if (currentToken.theToken != ",")
                     return false;
-                theWriter.WriteLine("<symbol> , </symbol>");
+                theWriter.WriteLine(indent(spaces)  + "<symbol> , </symbol>");
             }
-            theWriter.WriteLine("<symbol> ; </symbol>");
+            theWriter.WriteLine(indent(spaces)  + "<symbol> ; </symbol>");
             return result;
         }
 
@@ -254,10 +582,10 @@ namespace JackAnalyser
                         default:
                             return false;   // not an allowable keyword for 'type'
                     }
-                    theWriter.WriteLine("<keyword> " + currentToken.theToken + " </keyword>");
+                    theWriter.WriteLine(indent(spaces)  + "<keyword> " + currentToken.theToken + " </keyword>");
                 }
                 else
-                    theWriter.WriteLine("<identifier> " + currentToken.theToken + " </identifier>");
+                    theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
             }
             else
                 return false;
@@ -268,6 +596,8 @@ namespace JackAnalyser
         {
             currentToken = nextToken;
             String line = theReader.ReadLine().Trim();
+            if (line.Contains("/token"))
+                return;
             if (line != null)
                 nextToken = getTheToken(line);
             else

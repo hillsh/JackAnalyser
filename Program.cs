@@ -77,6 +77,7 @@ namespace JackAnalyser
                         theTokenizer = new JackTokenizer(outFile);
                         inFile = new StreamReader(file.FullName);
                         theTokenizer.ReadTheFile();
+                        Console.WriteLine("Tokenizing finished.");
                         outFile.Flush();
                         memStr.Position = 0;
                         inFile.Close();
