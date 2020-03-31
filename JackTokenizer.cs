@@ -13,7 +13,7 @@ namespace JackAnalyser
         private enum tokenType { KEYWORD, SYMBOL, IDENTIFIER, INT_CONST, STRING_CONST };
         private static String[] keyWords = {"class","constructor","function","method","field","static","var",
         "int","char","boolean","void","true","false","null","this","let","do","if","else","while","return"};
-        private static String[] symbols = {"{","}","(",")","[","]",".",",",";","+","-","*","/","$","|","<",
+        private static String[] symbols = {"{","}","(",")","[","]",".",",",";","+","-","*","/","$","&","|","<",
         ">","=","~","\u0007"};
         private Boolean hasMoreTokens = false;
         private StreamWriter theWriter;
@@ -42,7 +42,7 @@ namespace JackAnalyser
             while (line != null)
             {
                 //process the line
-                line.Trim();
+                line = line.Trim();
                 if (!(line.StartsWith("//") || line.Length == 0)) //Skip empty lines of full line comments
                 {
                     // Check for the other type of comment

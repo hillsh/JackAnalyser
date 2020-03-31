@@ -371,10 +371,10 @@ namespace JackAnalyser
                     case "-":
                     case "*":
                     case "/":
-                    case "&":
+                    case "&amp;":
                     case "|":
-                    case "<":
-                    case ">":
+                    case "&lt;":
+                    case "&gt;":
                     case "=":
                         theWriter.WriteLine(indent(spaces)  + "<symbol> "+currentToken.theToken + " </symbol>");
                         advance();
@@ -396,14 +396,42 @@ namespace JackAnalyser
 
         private Boolean CompileTerm()
         {
-            Boolean result = true;
+            Boolean result = true, doAdvance = true; ;
 
             theWriter.WriteLine(indent(spaces) + "<term>");
             spaces += 2;
             switch (currentToken.theTokenType)
             {
                 case tokenType.IDENTIFIER:
-                    theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
+                    if (nextToken.theTokenType == tokenType.SYMBOL)
+                    {
+                        switch(nextToken.theToken)
+                        {
+                            case "[":
+                                theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
+                                advance();
+                                theWriter.WriteLine(indent(spaces) + "<symbol> [ </symbol>");
+                                advance();
+                                if (!CompileExpression())
+                                    return false;
+                                if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "]")))
+                                    return false;
+                                theWriter.WriteLine(indent(spaces) + "<symbol> ] </symbol>");
+                                break;
+                            case ".":
+                            case "(":
+                                if (!CompileSubroutineCall())
+                                    return false;
+                                doAdvance = false;
+                                break;
+                            default:
+                                theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
+                                break;
+                       }
+
+                    }
+                    else
+                        theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
                     break;
                 case tokenType.KEYWORD:
                     switch(currentToken.theToken)
@@ -419,6 +447,28 @@ namespace JackAnalyser
                     }
                     break;
                 case tokenType.SYMBOL:
+                    if((currentToken.theToken == "~") || (currentToken.theToken == "-")) //unary operator
+                    {
+                        theWriter.WriteLine(indent(spaces)  + "<symbol> " + currentToken.theToken + " </symbol>");
+                        advance();
+                        if (!CompileTerm())
+                            return false;
+                        doAdvance = false;
+                        break;
+                    }
+                    else
+                    {
+                        if (currentToken.theToken == "(")   //Expression in brackets
+                        {
+                            theWriter.WriteLine(indent(spaces)  + "<symbol> ( </symbol>");
+                            advance();
+                            if (!CompileExpression())
+                                return false;
+                            if (currentToken.theToken != ")")
+                                return false;
+                            theWriter.WriteLine(indent(spaces)  + "<symbol> ) </symbol>");
+                        }
+                    }
                     break;
                 case tokenType.INT_CONST:
                     theWriter.WriteLine(indent(spaces)  + "<integerConstant> " + currentToken.theToken + " </integerConstant>");
@@ -429,7 +479,8 @@ namespace JackAnalyser
                 default:
                     return false;
             }
-            advance();
+            if (doAdvance)
+                advance();
             spaces-=2;
             theWriter.WriteLine(indent(spaces)  + "</term>");
             return result;
