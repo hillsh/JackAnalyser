@@ -19,7 +19,7 @@ namespace JackAnalyser
        static void Main(string[] args)
         {
             JackTokenizer theTokenizer;
-            CompilationEngine theCompiler;
+            XMLEngine theCompiler;
             String sBase, line;
 
             sBase = "E:\\Learning\\Coursera\\nand2tetris\\projects\\10\\";
@@ -48,7 +48,7 @@ namespace JackAnalyser
                 inFile.Close();
                 inFile = new StreamReader(memStr);
                 xmlFile = new StreamWriter(line);
-                theCompiler = new CompilationEngine(inFile, xmlFile);
+                theCompiler = new XMLEngine(inFile, xmlFile);
                 theCompiler.CompiletheTokens();
                 //close the Streamreader and Streamwriter
                 inFile.Close();
@@ -83,7 +83,7 @@ namespace JackAnalyser
                         inFile.Close();
                         inFile = new StreamReader(memStr);
                         xmlFile = new StreamWriter(tmp + "SH.xml");
-                        theCompiler = new CompilationEngine(inFile, xmlFile);
+                        theCompiler = new XMLEngine(inFile, xmlFile);
                         theCompiler.CompiletheTokens();
                        //close the Streamreader and Streamwriter
                         inFile.Close();
