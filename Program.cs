@@ -10,7 +10,8 @@ namespace JackAnalyser
     class Program
     {
         public static StreamReader inFile;
-        public static StreamWriter outFile, xmlFile;
+//        public static StreamWriter outFile, xmlFile;
+        public static StreamWriter outFile, vmFile;
         public static MemoryStream memStr;
         public static StreamWriter strW;
         public static StreamReader strR;
@@ -19,7 +20,8 @@ namespace JackAnalyser
        static void Main(string[] args)
         {
             JackTokenizer theTokenizer;
-            XMLEngine theCompiler;
+//            XMLEngine theCompiler;
+            CompilationEngine theCompiler;
             String sBase, line;
 
             sBase = "E:\\Learning\\Coursera\\nand2tetris\\projects\\10\\";
@@ -47,13 +49,22 @@ namespace JackAnalyser
                 memStr.Position = 0;
                 inFile.Close();
                 inFile = new StreamReader(memStr);
-                xmlFile = new StreamWriter(line);
-                theCompiler = new XMLEngine(inFile, xmlFile);
-                theCompiler.CompiletheTokens();
+//                xmlFile = new StreamWriter(line);
+//                theCompiler = new XMLEngine(inFile, xmlFile);
+//                theCompiler.CompiletheTokens();
+                vmFile = new StreamWriter(line);
+                theCompiler = new CompilationEngine(inFile, vmFile);
+                theCompiler.CompiletheTokens(true); // The first pass fills the Symbol Table
+                //close the Streamreader and Streamwriter
+                memStr.Position = 0;
+                inFile.Close();
+                inFile = new StreamReader(memStr);
+                theCompiler.CompiletheTokens(false); // The second pass writes the VM file
                 //close the Streamreader and Streamwriter
                 inFile.Close();
-                outFile.Close();
-                xmlFile.Close();
+                outFile.Close();    // this closes the underlying memory stream
+//                xmlFile.Close();
+                vmFile.Close();
             }
             else
             {
@@ -82,13 +93,21 @@ namespace JackAnalyser
                         memStr.Position = 0;
                         inFile.Close();
                         inFile = new StreamReader(memStr);
-                        xmlFile = new StreamWriter(tmp + "SH.xml");
-                        theCompiler = new XMLEngine(inFile, xmlFile);
-                        theCompiler.CompiletheTokens();
+//                        xmlFile = new StreamWriter(tmp + "SH.xml");
+//                        theCompiler = new XMLEngine(inFile, xmlFile);
+//                        theCompiler.CompiletheTokens();
+                        vmFile = new StreamWriter(tmp + "SH.vm");
+                        theCompiler = new CompilationEngine(inFile, vmFile);
+                        theCompiler.CompiletheTokens(true);
+                        memStr.Position = 0;
+                        inFile.Close();
+                        inFile = new StreamReader(memStr);
+                        theCompiler.CompiletheTokens(false);
                        //close the Streamreader and Streamwriter
                         inFile.Close();
                         outFile.Close();
-                        xmlFile.Close();
+//                        xmlFile.Close();
+                        vmFile.Close();
                     }
                 }
                 else

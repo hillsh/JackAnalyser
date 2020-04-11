@@ -9,16 +9,16 @@ namespace JackAnalyser
 {
     class SymbolTable
     {
-        public enum varTypes { STATIC, FIELD, ARG, VAR, NULL};
-        private int staticCount, fieldCount, argCount, varCount;
-        private struct identifier
+        public enum varTypes { STATIC, FIELD, ARG, VAR, CLASS, SUBROUTINE, NULL };
+        public int staticCount, fieldCount, argCount, varCount;
+        public struct identifier
         {
             public String iName;
             public varTypes iKind;
             public String iType;
             public int iIndex;
         }
-        private Dictionary<String, identifier>  theSymbolTable;
+        public Dictionary<String, identifier> theSymbolTable;
 
         public SymbolTable()
         {
@@ -26,20 +26,7 @@ namespace JackAnalyser
             staticCount = fieldCount = argCount = varCount = 0;
         }
 
-        public void startSubroutine()
-        {
-            foreach (KeyValuePair<String, identifier> kvp in theSymbolTable)
-            {
-                if ((kvp.Value.iKind == varTypes.ARG) || (kvp.Value.iKind == varTypes.VAR))
-                {
-                    theSymbolTable.Remove(kvp.Key);
-                }
-            }
-            argCount = 0;
-            varCount = 0;
-        }
-
-        public void newVar(String tname, String ttype, varTypes tKind)
+        public void newVar(String tname, String ttype, varTypes tKind, Boolean beingUsed)
         {
             identifier id;
 
@@ -65,10 +52,17 @@ namespace JackAnalyser
                     id.iIndex = varCount;
                     varCount++;
                     break;
+                default:
+                    id.iIndex = 0;
+                    break;
             }
             theSymbolTable.Add(tname, id);
         }
-        public int idCount(varTypes tKind)
+        public void newVar(String tname, identifier id)
+        {
+            theSymbolTable.Add(tname, id);
+        }
+            public int idCount(varTypes tKind)
         {
             int tCount = 0;
 
@@ -80,7 +74,7 @@ namespace JackAnalyser
                 case varTypes.FIELD:
                     tCount = fieldCount;
                     break;
-               case varTypes.ARG:
+                case varTypes.ARG:
                     tCount = argCount;
                     break;
                 case varTypes.VAR:
@@ -133,6 +127,7 @@ namespace JackAnalyser
                 return -1;
             }
         }
+
     }
 
 }

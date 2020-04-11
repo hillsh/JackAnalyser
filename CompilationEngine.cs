@@ -20,16 +20,20 @@ namespace JackAnalyser
         private StreamReader theReader;
         private StreamWriter theWriter;
         private Boolean tokensExist = true;
+        private LinkedList<SymbolTable> tableList;
+        private SymbolTable.identifier currentVar;
 
         public CompilationEngine(StreamReader sr, StreamWriter sw)
         {
             theReader = sr;
             theWriter = sw;
+            tableList = new LinkedList<SymbolTable>();
         }
 
         public Boolean CompiletheTokens()
         {
             Boolean result;
+
             String line = theReader.ReadLine(); // the first line of the file contains <tokens>
             line = theReader.ReadLine();        // load in the first token
             nextToken = getTheToken(line);
@@ -50,6 +54,9 @@ namespace JackAnalyser
         private Boolean CompileClass() // arriving here means that the keyword 'class' has been read
         {
             Boolean result = true;
+
+            SymbolTable classTable = new SymbolTable();
+            tableList.AddFirst(classTable);
             theWriter.WriteLine(indent(spaces)  + "<class>");
             spaces+=2;
             theWriter.WriteLine(indent(spaces)  + "<keyword> class </keyword>");
@@ -75,7 +82,16 @@ namespace JackAnalyser
                             switch (currentToken.theToken)
                             {
                                 case "static":
+                                    currentVar.iKind = SymbolTable.varTypes.STATIC;
+                                    theWriter.WriteLine(indent(spaces)  + "<classVarDec>");
+                                    spaces += 2;
+                                    if (!CompileClassVarDec())
+                                        return false;
+                                    spaces -= 2;
+                                    theWriter.WriteLine(indent(spaces)  + "</classVarDec>");
+                                    break;
                                 case "field":
+                                    currentVar.iKind = SymbolTable.varTypes.FIELD;
                                     theWriter.WriteLine(indent(spaces)  + "<classVarDec>");
                                     spaces += 2;
                                     if (!CompileClassVarDec())
@@ -612,6 +628,18 @@ namespace JackAnalyser
             spaces -= 2;
             return result;
         }
+
+        private void WriteVarXML()
+        {
+            theWriter.WriteLine(indent(spaces)  + "<symboltable_entry> ");
+            spaces += 2;
+            theWriter.WriteLine(indent(spaces)  + "<varname> " + currentVar.iName + " </varname>");
+            theWriter.WriteLine(indent(spaces)  + "<varkind> " + currentVar.iKind + " </varkind>");
+            theWriter.WriteLine(indent(spaces)  + "<vartype> " + currentVar.iType + " </vartype>");
+            theWriter.WriteLine(indent(spaces)  + "<varindex> " + currentVar.iIndex + " </varindex>");
+            spaces -= 2;
+            theWriter.WriteLine(indent(spaces)  + "</symboltable_entry> ");
+        }
         
         private Boolean CompileClassVarDec()
         {
@@ -627,6 +655,19 @@ namespace JackAnalyser
                 if (currentToken.theTokenType != tokenType.IDENTIFIER)
                     return false;
                 theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
+                currentVar.iName = currentToken.theToken;
+                if (currentVar.iKind == SymbolTable.varTypes.STATIC)
+                {
+                    currentVar.iIndex = tableList.First.Value.staticCount;
+                    tableList.First.Value.staticCount++;
+                }
+                else   // There are only two choices here...
+                {
+                    currentVar.iIndex = tableList.First.Value.fieldCount;
+                    tableList.First.Value.fieldCount++;
+                }
+                tableList.First.Value.newVar(currentVar.iName, currentVar); //Add the new variable to the class symbol table
+                WriteVarXML();
                 advance();
                 if (currentToken.theTokenType != tokenType.SYMBOL)
                     return false;
@@ -660,6 +701,7 @@ namespace JackAnalyser
                 }
                 else
                     theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
+                currentVar.iType = currentToken.theToken;
             }
             else
                 return false;
