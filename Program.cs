@@ -54,12 +54,12 @@ namespace JackAnalyser
 //                theCompiler.CompiletheTokens();
                 vmFile = new StreamWriter(line);
                 theCompiler = new CompilationEngine(inFile, vmFile);
-                theCompiler.CompiletheTokens(true); // The first pass fills the Symbol Table
+                theCompiler.CompiletheTokens(); // The first pass fills the Symbol Table
                 //close the Streamreader and Streamwriter
                 memStr.Position = 0;
                 inFile.Close();
                 inFile = new StreamReader(memStr);
-                theCompiler.CompiletheTokens(false); // The second pass writes the VM file
+//                theCompiler.CompiletheTokens(); // The second pass writes the VM file
                 //close the Streamreader and Streamwriter
                 inFile.Close();
                 outFile.Close();    // this closes the underlying memory stream
@@ -98,11 +98,11 @@ namespace JackAnalyser
 //                        theCompiler.CompiletheTokens();
                         vmFile = new StreamWriter(tmp + "SH.vm");
                         theCompiler = new CompilationEngine(inFile, vmFile);
-                        theCompiler.CompiletheTokens(true);
+                        theCompiler.CompiletheTokens();
                         memStr.Position = 0;
                         inFile.Close();
                         inFile = new StreamReader(memStr);
-                        theCompiler.CompiletheTokens(false);
+//                        theCompiler.CompiletheTokens();
                        //close the Streamreader and Streamwriter
                         inFile.Close();
                         outFile.Close();
