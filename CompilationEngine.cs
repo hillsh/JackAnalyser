@@ -10,7 +10,6 @@ namespace JackAnalyser
     class CompilationEngine
     {
         private enum tokenType { KEYWORD, SYMBOL, IDENTIFIER, INT_CONST, STRING_CONST, ERROR };
-        private int spaces = 6;
         private int whileLblCount, ifLabelCount;
         private struct token
         {
@@ -88,22 +87,17 @@ namespace JackAnalyser
             ifLabelCount = -1;
             SymbolTable classTable = new SymbolTable();
             tableList.AddFirst(classTable);
-//            theWriter.WriteLine(indent(spaces)  + "<class>");
-//            spaces+=2;
-//            theWriter.WriteLine(indent(spaces)  + "<keyword> class </keyword>");
             advance();
             if (currentToken.theTokenType != tokenType.IDENTIFIER)
                 return false;
             else
             {
-//                theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
                 className = currentToken.theToken;
                 advance();
                 if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "{")))
                     return false;
                 else
                 {
-//                    theWriter.WriteLine(indent(spaces)  + "<symbol> { </symbol>");
                     advance();
                     while(!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "}")))
                     {
@@ -115,21 +109,13 @@ namespace JackAnalyser
                             {
                                 case "static":
                                     currentVar.iKind = SymbolTable.varTypes.STATIC;
-//                                    theWriter.WriteLine(indent(spaces)  + "<classVarDec>");
-//                                    spaces += 2;
                                     if (!CompileClassVarDec())
                                         return false;
-//                                    spaces -= 2;
-//                                    theWriter.WriteLine(indent(spaces)  + "</classVarDec>");
                                     break;
                                 case "field":
                                     currentVar.iKind = SymbolTable.varTypes.FIELD;
-//                                    theWriter.WriteLine(indent(spaces)  + "<classVarDec>");
-//                                    spaces += 2;
                                     if (!CompileClassVarDec())
                                         return false;
-//                                    spaces -= 2;
-//                                    theWriter.WriteLine(indent(spaces)  + "</classVarDec>");
                                     break;
                                 case "constructor":
                                 case "function":
@@ -143,9 +129,6 @@ namespace JackAnalyser
                         }
                         advance();
                     }
-//                    theWriter.WriteLine(indent(spaces)  + "<symbol> } </symbol>");
-//                    spaces-=2;
-//                    theWriter.WriteLine(indent(spaces)  + "</class>");
                 }
             }
             return result;
@@ -157,11 +140,8 @@ namespace JackAnalyser
             SymbolTable subTable;
             Boolean isMethod = false, isConstructor = false, isVoid = false;
             
-//            theWriter.WriteLine(indent(spaces)  + "<subroutineDec>");
-//            spaces+=2;
             subTable = new SymbolTable();
             tableList.AddLast(subTable);
-//            theWriter.WriteLine(indent(spaces)  + "<keyword> " + currentToken.theToken + " </keyword>");
             if(currentToken.theToken == "method")
             {
                 isMethod = true;
@@ -186,7 +166,6 @@ namespace JackAnalyser
             advance();
             if (currentToken.theTokenType != tokenType.IDENTIFIER)
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
             theWriter.Write("function " + className + "." + currentToken.theToken);
             advance();
             if ((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "("))
@@ -194,18 +173,12 @@ namespace JackAnalyser
                 result = true;
             else
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<parameterList>");
             advance();
             if (!CompileParameterList())
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "</parameterList>");
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> ) </symbol>");
             advance();
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "{")))
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<subroutineBody>");
-//            spaces += 2;
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> { </symbol>");
             advance();
             if (!CompileVarDecs())
                 return false;
@@ -255,11 +228,6 @@ namespace JackAnalyser
             }
            if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "}")))
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> } </symbol>");
-//            spaces -= 2;
-//            theWriter.WriteLine(indent(spaces)  + "</subroutineBody>");
-//            spaces-=2;
-            //            theWriter.WriteLine(indent(spaces)  + "</subroutineDec>");
              foreach(KeyValuePair<String, SymbolTable.identifier> entry in tableList.Last.Value.theSymbolTable)
             {
                 currentVar = entry.Value;
@@ -276,8 +244,6 @@ namespace JackAnalyser
         {
             Boolean result = true;
 
-//            theWriter.WriteLine(indent(spaces)  + "<statements>");
-//            spaces+=2;
             while (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "}")))
             {
                 if (currentToken.theTokenType != tokenType.KEYWORD)
@@ -308,8 +274,6 @@ namespace JackAnalyser
                         return false;
                 }
             }
-//            spaces-=2;
-//            theWriter.WriteLine(indent(spaces)  + "</statements>");
             return result;
         }
 
@@ -318,15 +282,11 @@ namespace JackAnalyser
             Boolean result = true, isArray = false;
             SymbolTable.identifier target;
 
-//            theWriter.WriteLine(indent(spaces)  + "<letStatement>");
-//            spaces+=2;
-//            theWriter.WriteLine(indent(spaces)  + "<keyword> let </keyword>");
             advance();
             if (!(currentToken.theTokenType == tokenType.IDENTIFIER))
                 return false;
             LookupVar(currentToken.theToken);
             target = currentVar;
-//            theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
             advance();
             if (!(currentToken.theTokenType == tokenType.SYMBOL))
                 return false;
@@ -334,19 +294,16 @@ namespace JackAnalyser
             {
                 isArray = true;
                 vmWriterPush(target);
-//                theWriter.WriteLine(indent(spaces)  + "<symbol> [ </symbol>");
                 advance();
                 if (!CompileExpression())
                     return false;
                 vmW.writeArithmetic(VMWriter.cmdType.ADD);
                 if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "]")))
                     return false;
-//                theWriter.WriteLine(indent(spaces)  + "<symbol> ] </symbol>");
                 advance();
             }
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "=")))
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> = </symbol>");
             advance();
             if (!CompileExpression())
                 return false;
@@ -362,9 +319,6 @@ namespace JackAnalyser
             }
             else
                 vmWriterPop(target);
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> ; </symbol>");
-//            spaces-=2;
-//            theWriter.WriteLine(indent(spaces)  + "</letStatement>");
             advance();
             return result;
         }
@@ -373,17 +327,11 @@ namespace JackAnalyser
         {
             Boolean result = true;
 
-//            theWriter.WriteLine(indent(spaces)  + "<doStatement>");
-//            spaces+=2;
-//            theWriter.WriteLine(indent(spaces)  + "<keyword> do </keyword>");
             advance();
             if (!CompileSubroutineCall(true))
                 return false;
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ";")))
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> ; </symbol>");
-//            spaces-=2;
-//            theWriter.WriteLine(indent(spaces)  + "</doStatement>");
             advance();
             vmW.writePop(VMWriter.segType.TEMP, 0);
             return result;
@@ -399,7 +347,6 @@ namespace JackAnalyser
 
             if (currentToken.theTokenType != tokenType.IDENTIFIER)
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
             if((nextToken.theTokenType == tokenType.SYMBOL) && (nextToken.theToken == "."))
             {
                 if (!LookupVar(currentToken.theToken))
@@ -446,31 +393,15 @@ namespace JackAnalyser
             switch (currentToken.theToken)
             {
                 case "(":
-//                    theWriter.WriteLine(indent(spaces)  + "<symbol> ( </symbol>");
                     advance();
                     if (!CompileExpressionList(out nArgs))
                         return false;
                     break;
-/*                case ".":
-                    theWriter.WriteLine(indent(spaces)  + "<symbol> . </symbol>");
-                    advance();
-                    if (currentToken.theTokenType != tokenType.IDENTIFIER)
-                        return false;
-                    theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
-                    advance();
-                    if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "(")))
-                        return false;
-                    theWriter.WriteLine(indent(spaces)  + "<symbol> ( </symbol>");
-                    advance();
-                    if (!CompileExpressionList())
-                        return false;
-                    break;  */
                 default:
                     return false;
             }
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ")")))
                 return false;
-            //            theWriter.WriteLine(indent(spaces)  + "<symbol> ) </symbol>");
             if (isObject || isMethod)
                 nArgs++;
             subCall += nArgs.ToString();
@@ -499,7 +430,6 @@ namespace JackAnalyser
                     Console.WriteLine("Unprepared for push segtype " + id.iKind);
                     break;
             }
-
         }
 
         private void vmWriterPop(SymbolTable.identifier id)
@@ -522,7 +452,6 @@ namespace JackAnalyser
                     Console.WriteLine("Unprepared for pop segtype " + id.iKind);
                     break;
             }
-
         }
 
         private Boolean CompileWhileStatement(int count)
@@ -530,28 +459,22 @@ namespace JackAnalyser
             Boolean result = true;
             
 
-//            theWriter.WriteLine(indent(spaces)  + "<whileStatement>");
-//            spaces+=2;
-//            theWriter.WriteLine(indent(spaces)  + "<keyword> while </keyword>");
             advance();
             theWriter.Write("label WHILE_EXP");
             theWriter.WriteLine(count.ToString());
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "(")))
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> ( </symbol>");
             advance();
             if (!CompileExpression())
                 return false;
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ")")))
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> ) </symbol>");
             advance();
             theWriter.WriteLine("not");
             theWriter.Write("if-goto WHILE_END");
             theWriter.WriteLine(count.ToString());
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "{")))
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> { </symbol>");
             advance();
             if (!CompileStatements())
                 return false;
@@ -560,9 +483,6 @@ namespace JackAnalyser
             theWriter.Write("goto WHILE_EXP");
             theWriter.WriteLine(count.ToString());
 
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> } </symbol>");
-//            spaces-=2;
-//            theWriter.WriteLine(indent(spaces)  + "</whileStatement>");
             theWriter.Write("label WHILE_END");
             theWriter.WriteLine(count.ToString());
             advance();
@@ -574,8 +494,6 @@ namespace JackAnalyser
             Boolean result = true, firstExp = true;
             nInList = 0;
 
-//            theWriter.WriteLine(indent(spaces)  + "<expressionList>");
-//            spaces+=2;
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ")")))   // if not an empty list
             {
                 do
@@ -584,7 +502,6 @@ namespace JackAnalyser
                         firstExp = false;
                     else
                     {
-//                        theWriter.WriteLine(indent(spaces)  + "<symbol> , </symbol>");
                         advance();
                     }
                     if (!CompileExpression())
@@ -593,8 +510,6 @@ namespace JackAnalyser
                 } while (((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ",")));
 
             }
-//            spaces-=2;
-//            theWriter.WriteLine(indent(spaces)  + "</expressionList>");
             return result;
         }
 
@@ -603,8 +518,6 @@ namespace JackAnalyser
             Boolean result = true;
             String op = "";
 
-//            theWriter.WriteLine(indent(spaces)  + "<expression>");
-//            spaces+=2;
             if (!CompileTerm())
                 return false;
             if(currentToken.theTokenType == tokenType.SYMBOL)
@@ -620,7 +533,6 @@ namespace JackAnalyser
                     case "&gt;":
                     case "=":
                         op = currentToken.theToken;
-//                        theWriter.WriteLine(indent(spaces)  + "<symbol> "+currentToken.theToken + " </symbol>");
                         advance();
                         if (!CompileTerm())
                             return false;
@@ -635,8 +547,6 @@ namespace JackAnalyser
                 }
             if(op != "")
                 vmW.writeArithmetic(op);
-//            spaces-=2;
-//            theWriter.WriteLine(indent(spaces)  + "</expression>");
             return result;
         }
 
@@ -644,8 +554,6 @@ namespace JackAnalyser
         {
             Boolean result = true, doAdvance = true; ;
 
-//            theWriter.WriteLine(indent(spaces) + "<term>");
-//            spaces += 2;
             switch (currentToken.theTokenType)
             {
                 case tokenType.IDENTIFIER:
@@ -655,10 +563,8 @@ namespace JackAnalyser
                         {
                             case "[":
                                 LookupVar(currentToken.theToken);
-//                                theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
                                 vmWriterPush(currentVar);
                                 advance();
-//                                theWriter.WriteLine(indent(spaces) + "<symbol> [ </symbol>");
                                 advance();
                                 if (!CompileExpression())
                                     return false;
@@ -667,7 +573,6 @@ namespace JackAnalyser
                                     return false;
                                 theWriter.WriteLine("pop pointer 1");
                                 theWriter.WriteLine("push that 0");
-//                                theWriter.WriteLine(indent(spaces) + "<symbol> ] </symbol>");
                                 break;
                             case ".":
                             case "(":
@@ -676,7 +581,6 @@ namespace JackAnalyser
                                 doAdvance = false;
                                 break;
                             default:
-//                                theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
                                 LookupVar(currentToken.theToken);
                                 vmWriterPush(currentVar);
                                 break;
@@ -685,7 +589,6 @@ namespace JackAnalyser
                     }
                     else
                     {
-//                        theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
                         LookupVar(currentToken.theToken);
                         vmWriterPush(currentVar);
                     }
@@ -703,7 +606,6 @@ namespace JackAnalyser
                             break;
                         case "this":
                             vmW.writePush(VMWriter.segType.POINTER, 0);
-//                            theWriter.WriteLine(indent(spaces)  + "<keyword> " + currentToken.theToken + " </keyword>");
                             break;
                         default:
                             return false;
@@ -713,7 +615,6 @@ namespace JackAnalyser
                     if((currentToken.theToken == "~") || (currentToken.theToken == "-")) //unary operator
                     {
                         String op = currentToken.theToken;
-//                        theWriter.WriteLine(indent(spaces)  + "<symbol> " + currentToken.theToken + " </symbol>");
                         advance();
                         if (!CompileTerm())
                             return false;
@@ -728,13 +629,11 @@ namespace JackAnalyser
                     {
                         if (currentToken.theToken == "(")   //Expression in brackets
                         {
-//                            theWriter.WriteLine(indent(spaces)  + "<symbol> ( </symbol>");
                             advance();
                             if (!CompileExpression())
                                 return false;
                             if (currentToken.theToken != ")")
                                 return false;
-//                            theWriter.WriteLine(indent(spaces)  + "<symbol> ) </symbol>");
                         }
                     }
                     break;
@@ -742,7 +641,6 @@ namespace JackAnalyser
                     int x = 0;
                     Int32.TryParse(currentToken.theToken, out x);
                     vmW.writePush(VMWriter.segType.CONST, x);
-//                    theWriter.WriteLine(indent(spaces)  + "<integerConstant> " + currentToken.theToken + " </integerConstant>");
                     break;
                 case tokenType.STRING_CONST:
                     vmW.writePush(VMWriter.segType.CONST, currentToken.theToken.Length);
@@ -753,28 +651,21 @@ namespace JackAnalyser
                         theWriter.WriteLine("call String.appendChar 2");
                         //ends with the address of the string at the top of the stack (I hope)
                     }
-//                    theWriter.WriteLine(indent(spaces)  + "<stringConstant> " + currentToken.theToken + " </stringConstant>");
                     break;
                 default:
                     return false;
             }
             if (doAdvance)
                 advance();
-//            spaces-=2;
-//            theWriter.WriteLine(indent(spaces)  + "</term>");
             return result;
         }
         private Boolean CompileIfStatement(int count)
         {
             Boolean result = true;
 
-//            theWriter.WriteLine(indent(spaces)  + "<ifStatement>");
-//            spaces+=2;
-//            theWriter.WriteLine(indent(spaces)  + "<keyword> if </keyword>");
             advance();
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "(")))
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> ( </symbol>");
             advance();
             if (!CompileExpression())
                 return false;
@@ -790,13 +681,11 @@ namespace JackAnalyser
             advance();
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "{")))
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> { </symbol>");
             advance();
             if (!CompileStatements())
                 return false;
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "}")))
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> } </symbol>");
             advance();
             if ((currentToken.theTokenType == tokenType.KEYWORD) && (currentToken.theToken == "else"))
             {
@@ -804,17 +693,14 @@ namespace JackAnalyser
                 theWriter.WriteLine(count.ToString());
                 theWriter.Write("label IF_FALSE");
                 theWriter.WriteLine(count.ToString());
-//                theWriter.WriteLine(indent(spaces)  + "<keyword> else </keyword>");
                 advance();
                 if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "{")))
                     return false;
-//                theWriter.WriteLine(indent(spaces)  + "<symbol> { </symbol>");
                 advance();
                 if (!CompileStatements())
                     return false;
                 if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == "}")))
                     return false;
-//                theWriter.WriteLine(indent(spaces)  + "<symbol> } </symbol>");
                 theWriter.Write("label IF_END");
                 theWriter.WriteLine(count.ToString());
                advance();
@@ -824,17 +710,12 @@ namespace JackAnalyser
                 theWriter.Write("label IF_FALSE");
                 theWriter.WriteLine(count.ToString());
             }
-//            spaces-=2;
-//            theWriter.WriteLine(indent(spaces)  + "</ifStatement>");
             return result;
         }
         private Boolean CompileReturnStatement()
         {
             Boolean result = true;
 
-//            theWriter.WriteLine(indent(spaces)  + "<returnStatement>");
-//            spaces+=2;
-//            theWriter.WriteLine(indent(spaces)  + "<keyword> return </keyword>");
             advance();
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ";")))
             {
@@ -843,10 +724,7 @@ namespace JackAnalyser
             }
             if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ";")))
                 return false;
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> ; </symbol>");
             advance();
-            //            spaces-=2;
-            //            theWriter.WriteLine(indent(spaces)  + "</returnStatement>");
             theWriter.WriteLine("return");
             return result;
         }
@@ -856,10 +734,7 @@ namespace JackAnalyser
             Boolean result = true;
             while ((currentToken.theTokenType == tokenType.KEYWORD) && (currentToken.theToken == "var"))
             {
-//                theWriter.WriteLine(indent(spaces)  + "<varDec>");
-//                spaces+=2;
                 currentVar.iKind = SymbolTable.varTypes.VAR;
-//                theWriter.WriteLine(indent(spaces)  + "<keyword> var </keyword>");
                 advance();
                 if (!CompileType())
                     return false;
@@ -868,7 +743,6 @@ namespace JackAnalyser
                     advance();
                     if (currentToken.theTokenType != tokenType.IDENTIFIER)
                         return false;
-//                    theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
                     currentVar.iName = currentToken.theToken;
                     currentVar.iIndex = tableList.Last.Value.varCount;
                     tableList.Last.Value.newVar(currentVar.iName, currentVar);
@@ -880,11 +754,7 @@ namespace JackAnalyser
                         break;
                     if (currentToken.theToken != ",")
                         return false;
-//                    theWriter.WriteLine(indent(spaces)  + "<symbol> , </symbol>");
                 }
-//                theWriter.WriteLine(indent(spaces)  + "<symbol> ; </symbol>");
-//                spaces-=2;
-//                theWriter.WriteLine(indent(spaces)  + "</varDec>");
                 advance();
             }
             return result;
@@ -893,7 +763,7 @@ namespace JackAnalyser
         private Boolean CompileParameterList()
         {
             Boolean result = true;
-//            spaces += 2;
+
             while(!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ")")))
             {
                 if (!CompileType())
@@ -901,7 +771,6 @@ namespace JackAnalyser
                 advance();
                 if (!(currentToken.theTokenType == tokenType.IDENTIFIER))
                     return false;
-//                theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
                 currentVar.iName = currentToken.theToken;
                 currentVar.iKind = SymbolTable.varTypes.ARG;
                 currentVar.iIndex = tableList.Last.Value.argCount;
@@ -912,31 +781,26 @@ namespace JackAnalyser
                 {
                     if (!((currentToken.theTokenType == tokenType.SYMBOL) && (currentToken.theToken == ",")))
                         return false;
-//                    theWriter.WriteLine(indent(spaces)  + "<symbol> , </symbol>");
                     advance();
                 }
             }
-//            spaces -= 2;
             return result;
         }
 
         private void WriteVarXML()
         {
-            theWriter.WriteLine(indent(spaces)  + "<symboltable_entry> ");
-            spaces += 2;
-            theWriter.WriteLine(indent(spaces)  + "<varname> " + currentVar.iName + " </varname>");
-            theWriter.WriteLine(indent(spaces)  + "<varkind> " + currentVar.iKind + " </varkind>");
-            theWriter.WriteLine(indent(spaces)  + "<vartype> " + currentVar.iType + " </vartype>");
-            theWriter.WriteLine(indent(spaces)  + "<varindex> " + currentVar.iIndex + " </varindex>");
-            spaces -= 2;
-            theWriter.WriteLine(indent(spaces)  + "</symboltable_entry> ");
+            theWriter.WriteLine( "<symboltable_entry> ");
+            theWriter.WriteLine( "<varname> " + currentVar.iName + " </varname>");
+            theWriter.WriteLine( "<varkind> " + currentVar.iKind + " </varkind>");
+            theWriter.WriteLine( "<vartype> " + currentVar.iType + " </vartype>");
+            theWriter.WriteLine( "<varindex> " + currentVar.iIndex + " </varindex>");
+            theWriter.WriteLine( "</symboltable_entry> ");
         }
         
         private Boolean CompileClassVarDec()
         {
             Boolean result = true;
 
-//            theWriter.WriteLine(indent(spaces)  + "<keyword> " + currentToken.theToken + " </keyword>");
             advance();
             if (!CompileType())
                 return false;
@@ -945,7 +809,6 @@ namespace JackAnalyser
                 advance();
                 if (currentToken.theTokenType != tokenType.IDENTIFIER)
                     return false;
-//                theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
                 currentVar.iName = currentToken.theToken;
                 if (currentVar.iKind == SymbolTable.varTypes.STATIC)
                 {
@@ -967,9 +830,7 @@ namespace JackAnalyser
                     break;
                 if (currentToken.theToken != ",")
                     return false;
-//                theWriter.WriteLine(indent(spaces)  + "<symbol> , </symbol>");
             }
-//            theWriter.WriteLine(indent(spaces)  + "<symbol> ; </symbol>");
             return result;
         }
 
@@ -989,11 +850,9 @@ namespace JackAnalyser
                         default:
                             return false;   // not an allowable keyword for 'type'
                     }
-                    //                    theWriter.WriteLine(indent(spaces)  + "<keyword> " + currentToken.theToken + " </keyword>");
                 }
                 else
                     result = true;
-//                    theWriter.WriteLine(indent(spaces)  + "<identifier> " + currentToken.theToken + " </identifier>");
 
                 currentVar.iType = currentToken.theToken;
             }

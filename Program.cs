@@ -38,7 +38,7 @@ namespace JackAnalyser
                 line = sBase + line;
                 inFile = new StreamReader(line);
                 int indx = line.LastIndexOf(".");
-                line = line.Substring(0, indx) + "SH.xml";
+                line = line.Substring(0, indx) + ".vm";
                 memStr = new MemoryStream();
                 outFile = new StreamWriter(memStr);
                 theTokenizer = new JackTokenizer(outFile);
@@ -94,7 +94,7 @@ namespace JackAnalyser
 //                        xmlFile = new StreamWriter(tmp + "SH.xml");
 //                        theCompiler = new XMLEngine(inFile, xmlFile);
 //                        theCompiler.CompiletheTokens();
-                        vmFile = new StreamWriter(tmp + "SH.vm");
+                        vmFile = new StreamWriter(tmp + ".vm");
                         theCompiler = new CompilationEngine(inFile, vmFile);
                         theCompiler.CompiletheTokens();
 //                        memStr.Position = 0;
