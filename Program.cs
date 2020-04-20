@@ -13,8 +13,6 @@ namespace JackAnalyser
 //        public static StreamWriter outFile, xmlFile;
         public static StreamWriter outFile, vmFile;
         public static MemoryStream memStr;
-        public static StreamWriter strW;
-        public static StreamReader strR;
         public static int labelPtr = 0;
         public static int retPtr = 0;
        static void Main(string[] args)
@@ -24,7 +22,7 @@ namespace JackAnalyser
             CompilationEngine theCompiler;
             String sBase, line;
 
-            sBase = "E:\\Learning\\Coursera\\nand2tetris\\projects\\10\\";
+            sBase = "E:\\Learning\\Coursera\\nand2tetris\\projects\\11\\";
 
             Console.WriteLine("Enter the name of the file with Jack code, or a directory name containing Jack files ");
             Console.WriteLine("The file name should be the complete path including the file type field (.jack} if it is a Jack file.");
@@ -56,9 +54,9 @@ namespace JackAnalyser
                 theCompiler = new CompilationEngine(inFile, vmFile);
                 theCompiler.CompiletheTokens(); // The first pass fills the Symbol Table
                 //close the Streamreader and Streamwriter
-                memStr.Position = 0;
-                inFile.Close();
-                inFile = new StreamReader(memStr);
+ //               memStr.Position = 0;
+ //               inFile.Close();
+ //               inFile = new StreamReader(memStr);
 //                theCompiler.CompiletheTokens(); // The second pass writes the VM file
                 //close the Streamreader and Streamwriter
                 inFile.Close();
@@ -99,9 +97,9 @@ namespace JackAnalyser
                         vmFile = new StreamWriter(tmp + "SH.vm");
                         theCompiler = new CompilationEngine(inFile, vmFile);
                         theCompiler.CompiletheTokens();
-                        memStr.Position = 0;
-                        inFile.Close();
-                        inFile = new StreamReader(memStr);
+//                        memStr.Position = 0;
+//                        inFile.Close();
+//                        inFile = new StreamReader(memStr);
 //                        theCompiler.CompiletheTokens();
                        //close the Streamreader and Streamwriter
                         inFile.Close();

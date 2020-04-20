@@ -24,7 +24,7 @@ namespace JackAnalyser
             switch (theSeg)
             {
                 case segType.ARG:
-                    theWriter.WriteLine("push arg " + indx.ToString());
+                    theWriter.WriteLine("push argument " + indx.ToString());
                     break;
                 case segType.CONST: // in this case the index is actually the value of the constant?
                     theWriter.WriteLine("push constant " + indx.ToString());
@@ -54,7 +54,7 @@ namespace JackAnalyser
             switch (theSeg)
             {
                 case segType.ARG:
-                    theWriter.WriteLine("pop arg " + indx.ToString());
+                    theWriter.WriteLine("pop argument " + indx.ToString());
                     break;
                 case segType.CONST: // does this ever happen?
                     theWriter.WriteLine("pop constant " + indx.ToString());
@@ -90,13 +90,13 @@ namespace JackAnalyser
                     theWriter.WriteLine("and");
                     break;
                 case cmdType.EQ:
-                    theWriter.WriteLine("eq ");
+                    theWriter.WriteLine("eq");
                     break;
                 case cmdType.GT:
                     theWriter.WriteLine("gt");
                     break;
                 case cmdType.LT:
-                    theWriter.WriteLine("lt ");
+                    theWriter.WriteLine("lt");
                     break;
                 case cmdType.NEG: // in this case the index is actually the value of the constant?
                     theWriter.WriteLine("neg");
@@ -109,6 +109,39 @@ namespace JackAnalyser
                     break;
                 case cmdType.SUB: // in this case the index is actually the value of the constant?
                     theWriter.WriteLine("sub");
+                    break;
+            }
+        }
+        public void writeArithmetic(String theOp)
+        {
+            switch (theOp)
+            {
+                case "+":
+                    theWriter.WriteLine("add");
+                    break;
+                case "&amp;": // in this case the index is actually the value of the constant?
+                    theWriter.WriteLine("and");
+                    break;
+                case "=":
+                    theWriter.WriteLine("eq");
+                    break;
+                case "&gt;":
+                    theWriter.WriteLine("gt");
+                    break;
+                case "&lt;":
+                    theWriter.WriteLine("lt");
+                    break;
+                case "|": // in this case the index is actually the value of the constant?
+                    theWriter.WriteLine("or");
+                    break;
+                case "-": // in this case the index is actually the value of the constant?
+                    theWriter.WriteLine("sub");
+                    break;
+                case "*":
+                    theWriter.WriteLine("call Math.multiply 2");
+                    break;
+                case "/":
+                    theWriter.WriteLine("call Math.divide 2");
                     break;
             }
         }

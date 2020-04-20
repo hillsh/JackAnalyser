@@ -18,17 +18,46 @@ namespace JackAnalyser
             public String iType;
             public int iIndex;
         }
+        public identifier nullID;
         public Dictionary<String, identifier> theSymbolTable;
 
         public SymbolTable()
         {
             theSymbolTable = new Dictionary<string, identifier>();
             staticCount = fieldCount = argCount = varCount = 0;
+            nullID.iName = "null";
+            nullID.iKind = varTypes.NULL;
+            nullID.iType = "";
+            nullID.iIndex = 0;
+
+        }
+
+        public void resetIndices()
+        {
+            argCount = varCount = 0;
+        }
+
+        public identifier FindVar(String n)
+        {
+            identifier id;
+
+            id = new identifier();
+            if(theSymbolTable.TryGetValue(n, out id))
+            {
+                return id;
+            }
+            else
+            {
+                return nullID;
+            }
         }
 
         public void newVar(String tname, String ttype, varTypes tKind, Boolean beingUsed)
         {
             identifier id;
+
+            if (theSymbolTable.ContainsKey(tname))
+                Console.WriteLine("The dictionary already contains the key " + tname);
 
             id = new identifier();
             id.iName = tname;
